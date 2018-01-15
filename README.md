@@ -8,13 +8,15 @@ Have a look at https://sentry.io for more information about Sentry.
 
 ## Installation
 
-    $ composer require punktde/sentry-flow
+```
+$ composer require punktde/sentry-flow
+```
 
 ## Configuration
 
 Add the following to your `Settings.yaml` and replace the `dsn` setting with your project DSN (API Keys in your Sentry project):
 
-```
+```yaml
 PunktDe:
   Sentry:
     Flow:
