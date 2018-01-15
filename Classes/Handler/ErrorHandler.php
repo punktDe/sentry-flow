@@ -3,7 +3,7 @@
 namespace PunktDe\Sentry\Flow\Handler;
 
 use Neos\Flow\Annotations as Flow;
-use Neos\Utility\ObjectAccess;
+use Neos\Flow\Core\Bootstrap;
 
 /**
  * @Flow\Scope("singleton")
@@ -15,6 +15,11 @@ class ErrorHandler
      * @var string
      */
     protected $dsn;
+
+    /**
+     * @var string
+     */
+    protected $environment;
 
     /**
      * @var \Raven_Client
@@ -31,7 +36,11 @@ class ErrorHandler
         $errorHandler->registerShutdownFunction();
         $this->client = $client;
 
-        $this->setTagsContext();
+        $this->setTags();
+        $this->setEnvironment();
+        $this->setRelease();
+        $this->setAppPath();
+
         $this->emitSentryClientCreated($client);
     }
 
@@ -48,11 +57,10 @@ class ErrorHandler
         }
 
         if (!$exception instanceof \Throwable) {
-            // can`t handle anything different from \Exception and \Throwable
             return;
         }
 
-        $this->setUserContext();
+        $this->setUser();
 
         $tags = array('code' => $exception->getCode());
         if ($exception instanceof \Neos\Flow\Exception) {
@@ -70,9 +78,9 @@ class ErrorHandler
     /**
      * Set tags on the raven context
      */
-    protected function setTagsContext()
+    protected function setTags()
     {
-        $objectManager = \Neos\Flow\Core\Bootstrap::$staticObjectManager;
+        $objectManager = Bootstrap::$staticObjectManager;
         /** @var \Neos\Flow\Utility\Environment $environment */
         $environment = $objectManager->get('Neos\Flow\Utility\Environment');
 
@@ -88,9 +96,9 @@ class ErrorHandler
     /**
      * Set user information on the raven context
      */
-    protected function setUserContext()
+    protected function setUser()
     {
-        $objectManager = \Neos\Flow\Core\Bootstrap::$staticObjectManager;
+        $objectManager = Bootstrap::$staticObjectManager;
         /** @var \Neos\Flow\Security\Context $securityContext */
         $securityContext = $objectManager->get('Neos\Flow\Security\Context');
 
@@ -108,12 +116,36 @@ class ErrorHandler
         }
     }
 
+    protected function setEnvironment()
+    {
+        $this->client->setEnvironment($this->environment);
+    }
+
+    protected function setRelease()
+    {
+        $filenames = scandir(FLOW_PATH_ROOT);
+        $release = '';
+        foreach ($filenames as $filename) {
+            if (strpos($filename, 'RELEASE_') === 0) {
+                $release = substr($filename, 8);
+                break;
+            }
+        }
+        $this->client->setRelease($release);
+    }
+
+    protected function setAppPath()
+    {
+        $this->client->setAppPath(FLOW_PATH_ROOT);
+    }
+
     /**
      * @param array $settings
      */
     public function injectSettings(array $settings)
     {
         $this->dsn = isset($settings['dsn']) ? $settings['dsn'] : '';
+        $this->environment = isset($settings['environment']) ? $settings['environment'] : '';
     }
 
     /**

@@ -1,7 +1,8 @@
 PunktDe:
   Sentry:
     Flow:
-      dsn: ''
+      dsn: '%env:SENTRY_DSN%'
+      environment: '%env:SENTRY_ENVIRONMENT%'
 Neos:
   Flow:
     error:

@@ -8,18 +8,12 @@ use Neos\Flow\ObjectManagement\ObjectManagerInterface;
 trait ExceptionHandlerTrait
 {
 
-    /**
-     * {@inheritdoc}
-     */
     public function echoExceptionWeb($exception)
     {
         $this->sendExceptionToSentry($exception);
         parent::echoExceptionWeb($exception);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function echoExceptionCLI($exception)
     {
         $this->sendExceptionToSentry($exception);
