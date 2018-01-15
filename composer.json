@@ -1,0 +1,21 @@
+{
+    "description": "Sends exceptions and additional data to Sentry server using Raven client.",
+    "type": "neos-package",
+    "name": "punktde/sentry-flow",
+    "license": "MIT",
+    "require": {
+        "neos/flow": "^4.3.2",
+        "sentry/sentry": "^1.2"
+
+    },
+    "autoload": {
+        "psr-4": {
+            "PunktDe\\Sentry\\Flow\\": "Classes/"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "PunktDe.Sentry.Flow"
+        }
+    }
+}

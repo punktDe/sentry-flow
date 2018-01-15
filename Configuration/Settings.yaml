@@ -1,0 +1,9 @@
+PunktDe:
+  Sentry:
+    Flow:
+      dsn: ''
+Neos:
+  Flow:
+    error:
+      exceptionHandler:
+        className: PunktDe\Sentry\Flow\Handler\ProductionExceptionHandler
