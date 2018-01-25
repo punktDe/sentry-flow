@@ -1,6 +1,5 @@
 <?php
-namespace PunktDe\Sentry\Flow\Handler;
-
+namespace PunktDe\Sentry\Flow\Exception;
 /*
  * This file is part of the PunktDe.Sentry.Flow package.
  *
@@ -9,12 +8,7 @@ namespace PunktDe\Sentry\Flow\Handler;
  * source code.
  */
 
-
-use PunktDe\Sentry\Flow\Handler\ExceptionHandlerTrait;
-
-class DebugExceptionHandler extends \Neos\Flow\Error\DebugExceptionHandler
+class SentryTestException extends \Exception
 {
-
-    use ExceptionHandlerTrait;
 
 }
