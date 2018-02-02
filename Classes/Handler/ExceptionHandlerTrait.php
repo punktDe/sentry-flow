@@ -14,10 +14,10 @@ trait ExceptionHandlerTrait
         parent::echoExceptionWeb($exception);
     }
 
-    public function echoExceptionCLI($exception)
+    public function echoExceptionCli($exception)
     {
         $this->sendExceptionToSentry($exception);
-        parent::echoExceptionCLI($exception);
+        parent::echoExceptionCli($exception);
     }
 
     /**
