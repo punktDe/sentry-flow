@@ -14,7 +14,7 @@ trait ExceptionHandlerTrait
         parent::echoExceptionWeb($exception);
     }
 
-    public function echoExceptionCli($exception)
+    public function echoExceptionCli(\Throwable $exception)
     {
         $this->sendExceptionToSentry($exception);
         parent::echoExceptionCli($exception);
