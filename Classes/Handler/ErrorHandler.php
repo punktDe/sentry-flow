@@ -40,6 +40,7 @@ class ErrorHandler
         $this->setEnvironment();
         $this->setRelease();
         $this->setAppPath();
+        $this->setPrefixes();
 
         $this->emitSentryClientCreated($client);
     }
@@ -137,6 +138,11 @@ class ErrorHandler
     protected function setAppPath()
     {
         $this->client->setAppPath(FLOW_PATH_ROOT);
+    }
+
+    protected function setPrefixes()
+    {
+        $this->client->setPrefixes([FLOW_PATH_ROOT]);
     }
 
     /**
