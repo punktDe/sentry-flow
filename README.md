@@ -1,5 +1,7 @@
 # [PunktDe.Sentry.Flow](https://github.com/punktDe/sentry-flow)
 
+[![Latest Stable Version](https://poser.pugx.org/punktDe/sentry-flow/v/stable)](https://packagist.org/packages/punktDe/sentry-flow) [![Total Downloads](https://poser.pugx.org/punktDe/sentry-flow/downloads)](https://packagist.org/packages/punktDe/sentry-flow) [![License](https://poser.pugx.org/punktDe/sentry-flow/license)](https://packagist.org/packages/punktDe/sentry-flow)
+
 This is a Sentry client package for the Flow framework.
 
 Have a look at https://sentry.io for more information about Sentry.
