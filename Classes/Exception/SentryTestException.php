@@ -1,5 +1,8 @@
 <?php
+declare(strict_types=1);
+
 namespace PunktDe\Sentry\Flow\Exception;
+
 /*
  * This file is part of the PunktDe.Sentry.Flow package.
  *

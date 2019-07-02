@@ -2,8 +2,6 @@
 
 This is a Sentry client package for the Flow framework.
 
-It's based on [Networkteam.SentryClient](https://github.com/networkteam/Networkteam.SentryClient).
-
 Have a look at https://sentry.io for more information about Sentry.
 
 ## Installation
@@ -20,7 +18,7 @@ Add the following to your `Settings.yaml` and replace the `dsn` setting with you
 PunktDe:
   Sentry:
     Flow:
-      dsn: 'https://public_key:secret_key@your-sentry-server.com/project-id'
+      dsn: 'https://secret_key@your-sentry-server.com/project-id'
 ```
 
 ## Usage
