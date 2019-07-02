@@ -75,12 +75,16 @@ class ErrorHandler
             return;
         }
 
-        Hub::getCurrent()->configureScope(function (Scope $scope) use ($exception): void {
+        if ($exception instanceof WithReferenceCodeInterface) {
+            $extraData['referenceCode'] = $exception->getReferenceCode();
+        }
+
+        Hub::getCurrent()->configureScope(function (Scope $scope) use ($exception, $extraData): void {
             $scope->setUser(['username' => $this->getCurrentUserName()]);
             $scope->setTag('code', (string)$exception->getCode());
 
-            if ($exception instanceof WithReferenceCodeInterface) {
-                $scope->setExtra('referenceCode', $exception->getReferenceCode());
+            foreach ($extraData as $extraDataKey => $extraDataValue) {
+                $scope->setExtra($extraDataKey, $extraDataValue);
             }
         });
 
