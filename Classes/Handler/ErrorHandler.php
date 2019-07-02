@@ -126,7 +126,7 @@ class ErrorHandler
     private function getReleaseFromRelaseFile(): string
     {
         $filenames = scandir(FLOW_PATH_ROOT);
-        $release = '';
+        $release = 'Unknown Release';
 
         foreach ($filenames as $filename) {
             if (strpos($filename, 'RELEASE_') === 0) {
