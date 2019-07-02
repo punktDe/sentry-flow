@@ -53,7 +53,7 @@ class ErrorHandler
 
         $options = Hub::getCurrent()->getClient()->getOptions();
         $options->setEnvironment($this->environment);
-        $options->setRelease($this->getReleaseFromRelaseFile());
+        $options->setRelease($this->getReleaseFromReleaseFile());
         $options->setProjectRoot(FLOW_PATH_ROOT);
         $options->setPrefixes([FLOW_PATH_ROOT]);
 
@@ -63,7 +63,7 @@ class ErrorHandler
     }
 
     /**
-     * Explicitly handle an exception, should be called from an exception handler (in Flow or TypoScript)
+     * Explicitly handle an exception, should be called from an exception handler (in Flow or Fusion)
      *
      * @param object $exception The exception to capture
      * @param array $extraData Additional data passed to the Sentry sample
@@ -94,7 +94,7 @@ class ErrorHandler
     /**
      * Set tags on the raven context
      */
-    protected function setTags(): void
+    private function setTags(): void
     {
         Hub::getCurrent()->configureScope(function (Scope $scope): void {
             $scope->setTag('php_version', 'phpversion()');
@@ -106,7 +106,7 @@ class ErrorHandler
     /**
      * @return string
      */
-    protected function getCurrentUserName(): string
+    private function getCurrentUserName(): string
     {
         $objectManager = Bootstrap::$staticObjectManager;
         /** @var Context $securityContext */
@@ -127,7 +127,7 @@ class ErrorHandler
     /**
      * @return string
      */
-    private function getReleaseFromRelaseFile(): string
+    private function getReleaseFromReleaseFile(): string
     {
         $filenames = scandir(FLOW_PATH_ROOT);
         $release = 'Unknown Release';
