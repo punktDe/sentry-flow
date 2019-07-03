@@ -20,7 +20,7 @@ Add the following to your `Settings.yaml` and replace the `dsn` setting with you
 PunktDe:
   Sentry:
     Flow:
-      dsn: 'https://secret_key@your-sentry-server.com/project-id'
+      dsn: 'https://public_key@your-sentry-server.com/project-id'
 ```
 
 ## Usage

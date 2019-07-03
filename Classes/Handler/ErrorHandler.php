@@ -49,6 +49,9 @@ class ErrorHandler
      */
     public function initializeObject()
     {
+        if (empty($this->dsn)) {
+            return;
+        }
         \Sentry\init(['dsn' => $this->dsn]);
 
         $options = Hub::getCurrent()->getClient()->getOptions();
@@ -70,6 +73,9 @@ class ErrorHandler
      */
     public function handleException($exception, array $extraData = []): void
     {
+        if (empty($this->dsn)) {
+            return;
+        }
 
         if (!$exception instanceof \Throwable) {
             return;
@@ -92,12 +98,12 @@ class ErrorHandler
     }
 
     /**
-     * Set tags on the raven context
+      * Set tags on the Sentry client context
      */
     private function setTags(): void
     {
         Hub::getCurrent()->configureScope(function (Scope $scope): void {
-            $scope->setTag('php_version', 'phpversion()');
+            $scope->setTag('php_version', phpversion());
             $scope->setTag('flow_context', (string)Bootstrap::$staticObjectManager->get(Environment::class)->getContext());
             $scope->setTag('flow_version', FLOW_VERSION_BRANCH);
         });
@@ -106,7 +112,7 @@ class ErrorHandler
     /**
      * @return string
      */
-    private function getCurrentUserName(): string
+    private function getCurrentUsername(): string
     {
         $objectManager = Bootstrap::$staticObjectManager;
         /** @var Context $securityContext */
