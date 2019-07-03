@@ -1,6 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace PunktDe\Sentry\Flow;
+
+/*
+ * This file is part of the PunktDe.Sentry.Flow package.
+ *
+ * This package is open source software. For the full copyright and license
+ * information, please view the LICENSE file which was distributed with this
+ * source code.
+ */
 
 use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Core\Booting\Sequence;
@@ -14,9 +23,6 @@ class Package extends BasePackage
      */
     public function boot(Bootstrap $bootstrap)
     {
-        require_once(FLOW_PATH_PACKAGES . '/Libraries/sentry/sentry/lib/Raven/Autoloader.php');
-        \Raven_Autoloader::register();
-
         $bootstrap->getSignalSlotDispatcher()->connect(Sequence::class, 'afterInvokeStep',
             function ($step, $runlevel) use ($bootstrap) {
                 if ($step->getIdentifier() === 'neos.flow:objectmanagement:runtime') {
@@ -25,5 +31,4 @@ class Package extends BasePackage
                 }
             });
     }
-
 }

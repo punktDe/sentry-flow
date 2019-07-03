@@ -1,8 +1,8 @@
 # [PunktDe.Sentry.Flow](https://github.com/punktDe/sentry-flow)
 
-This is a Sentry client package for the Flow framework.
+[![Latest Stable Version](https://poser.pugx.org/punktDe/sentry-flow/v/stable)](https://packagist.org/packages/punktDe/sentry-flow) [![Total Downloads](https://poser.pugx.org/punktDe/sentry-flow/downloads)](https://packagist.org/packages/punktDe/sentry-flow) [![License](https://poser.pugx.org/punktDe/sentry-flow/license)](https://packagist.org/packages/punktDe/sentry-flow)
 
-It's based on [Networkteam.SentryClient](https://github.com/networkteam/Networkteam.SentryClient).
+This is a Sentry client package for the Flow framework.
 
 Have a look at https://sentry.io for more information about Sentry.
 
@@ -20,7 +20,7 @@ Add the following to your `Settings.yaml` and replace the `dsn` setting with you
 PunktDe:
   Sentry:
     Flow:
-      dsn: 'https://public_key:secret_key@your-sentry-server.com/project-id'
+      dsn: 'https://public_key@your-sentry-server.com/project-id'
 ```
 
 ## Usage

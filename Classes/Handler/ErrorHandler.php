@@ -1,9 +1,23 @@
 <?php
+declare(strict_types=1);
 
 namespace PunktDe\Sentry\Flow\Handler;
 
+/*
+ * This file is part of the PunktDe.Sentry.Flow package.
+ *
+ * This package is open source software. For the full copyright and license
+ * information, please view the LICENSE file which was distributed with this
+ * source code.
+ */
+
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Core\Bootstrap;
+use Neos\Flow\Error\WithReferenceCodeInterface;
+use Neos\Flow\Security\Context;
+use Neos\Flow\Utility\Environment;
+use Sentry\State\Hub;
+use Sentry\State\Scope;
 
 /**
  * @Flow\Scope("singleton")
@@ -22,38 +36,44 @@ class ErrorHandler
     protected $environment;
 
     /**
-     * @var \Raven_Client
+     * @param array $settings
      */
-    protected $client;
+    public function injectSettings(array $settings)
+    {
+        $this->dsn = $settings['dsn'] ?? '';
+        $this->environment = $settings['environment'] ?? '';
+    }
 
     /**
      * Initialize the raven client and fatal error handler (shutdown function)
      */
     public function initializeObject()
     {
-        $client = new \Raven_Client($this->dsn);
-        $errorHandler = new \Raven_ErrorHandler($client, true);
-        $errorHandler->registerShutdownFunction();
-        $this->client = $client;
+        if (empty($this->dsn)) {
+            return;
+        }
+        \Sentry\init(['dsn' => $this->dsn]);
+
+        $options = Hub::getCurrent()->getClient()->getOptions();
+        $options->setEnvironment($this->environment);
+        $options->setRelease($this->getReleaseFromReleaseFile());
+        $options->setProjectRoot(FLOW_PATH_ROOT);
+        $options->setPrefixes([FLOW_PATH_ROOT]);
 
         $this->setTags();
-        $this->setEnvironment();
-        $this->setRelease();
-        $this->setAppPath();
-        $this->setPrefixes();
 
-        $this->emitSentryClientCreated($client);
+        $this->emitSentryClientCreated();
     }
 
     /**
-     * Explicitly handle an exception, should be called from an exception handler (in Flow or TypoScript)
+     * Explicitly handle an exception, should be called from an exception handler (in Flow or Fusion)
      *
      * @param object $exception The exception to capture
      * @param array $extraData Additional data passed to the Sentry sample
      */
-    public function handleException($exception, array $extraData = array())
+    public function handleException($exception, array $extraData = []): void
     {
-        if (!$this->client instanceof \Raven_Client) {
+        if (empty($this->dsn)) {
             return;
         }
 
@@ -61,114 +81,78 @@ class ErrorHandler
             return;
         }
 
-        $this->setUser();
-
-        $tags = array('code' => $exception->getCode());
-        if ($exception instanceof \Neos\Flow\Exception) {
+        if ($exception instanceof WithReferenceCodeInterface) {
             $extraData['referenceCode'] = $exception->getReferenceCode();
         }
 
-        $this->client->captureException($exception, array(
-                'message' => $exception->getMessage(),
-                'extra' => $extraData,
-                'tags' => $tags
-            )
-        );
+        Hub::getCurrent()->configureScope(function (Scope $scope) use ($exception, $extraData): void {
+            $scope->setUser(['username' => $this->getCurrentUsername()]);
+            $scope->setTag('code', (string)$exception->getCode());
+
+            foreach ($extraData as $extraDataKey => $extraDataValue) {
+                $scope->setExtra($extraDataKey, $extraDataValue);
+            }
+        });
+
+        \Sentry\captureException($exception);
     }
 
     /**
-     * Set tags on the raven context
+      * Set tags on the Sentry client context
      */
-    protected function setTags()
+    private function setTags(): void
     {
-        $objectManager = Bootstrap::$staticObjectManager;
-        /** @var \Neos\Flow\Utility\Environment $environment */
-        $environment = $objectManager->get('Neos\Flow\Utility\Environment');
-
-        $tags = array(
-            'php_version' => phpversion(),
-            'flow_context' => (string)$environment->getContext(),
-            'flow_version' => FLOW_VERSION_BRANCH
-        );
-
-        $this->client->tags_context($tags);
+        Hub::getCurrent()->configureScope(function (Scope $scope): void {
+            $scope->setTag('php_version', phpversion());
+            $scope->setTag('flow_context', (string)Bootstrap::$staticObjectManager->get(Environment::class)->getContext());
+            $scope->setTag('flow_version', FLOW_VERSION_BRANCH);
+        });
     }
 
     /**
-     * Set user information on the raven context
+     * @return string
      */
-    protected function setUser()
+    private function getCurrentUsername(): string
     {
         $objectManager = Bootstrap::$staticObjectManager;
-        /** @var \Neos\Flow\Security\Context $securityContext */
-        $securityContext = $objectManager->get('Neos\Flow\Security\Context');
+        /** @var Context $securityContext */
+        $securityContext = $objectManager->get(Context::class);
 
-        $userContext = array();
+        $userName = '';
 
         if ($securityContext->isInitialized()) {
             $account = $securityContext->getAccount();
             if ($account !== null) {
-                $userContext['username'] = $account->getAccountIdentifier();
+                $userName = $account->getAccountIdentifier();
             }
         }
 
-        if ($userContext !== array()) {
-            $this->client->user_context($userContext);
-        }
+        return $userName;
     }
 
-    protected function setEnvironment()
-    {
-        $this->client->setEnvironment($this->environment);
-    }
-
-    protected function setRelease()
+    /**
+     * @return string
+     */
+    private function getReleaseFromReleaseFile(): string
     {
         $filenames = scandir(FLOW_PATH_ROOT);
-        $release = '';
+        $release = 'Unknown Release';
+
         foreach ($filenames as $filename) {
             if (strpos($filename, 'RELEASE_') === 0) {
                 $release = substr($filename, 8);
                 break;
             }
         }
-        $this->client->setRelease($release);
-    }
 
-    protected function setAppPath()
-    {
-        $this->client->setAppPath(FLOW_PATH_ROOT);
-    }
-
-    protected function setPrefixes()
-    {
-        $this->client->setPrefixes([FLOW_PATH_ROOT]);
-    }
-
-    /**
-     * @param array $settings
-     */
-    public function injectSettings(array $settings)
-    {
-        $this->dsn = isset($settings['dsn']) ? $settings['dsn'] : '';
-        $this->environment = isset($settings['environment']) ? $settings['environment'] : '';
-    }
-
-    /**
-     * @return \Raven_Client
-     */
-    public function getClient()
-    {
-        return $this->client;
+        return $release;
     }
 
     /**
      * @Flow\Signal
-     * @param $client
      * @return void
      */
-    public function emitSentryClientCreated($client)
+    public function emitSentryClientCreated()
     {
     }
-
 }

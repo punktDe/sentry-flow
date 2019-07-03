@@ -1,6 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace PunktDe\Sentry\Flow\Handler;
+
+/*
+ * This file is part of the PunktDe.Sentry.Flow package.
+ *
+ * This package is open source software. For the full copyright and license
+ * information, please view the LICENSE file which was distributed with this
+ * source code.
+ */
 
 use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\ObjectManagement\ObjectManagerInterface;
@@ -28,7 +37,7 @@ trait ExceptionHandlerTrait
      *
      * @param object $exception \Exception or \Throwable
      */
-    protected function sendExceptionToSentry($exception)
+    protected function sendExceptionToSentry($exception): void
     {
         if (!Bootstrap::$staticObjectManager instanceof ObjectManagerInterface) {
             return;
@@ -47,5 +56,4 @@ trait ExceptionHandlerTrait
             }
         }
     }
-
 }
