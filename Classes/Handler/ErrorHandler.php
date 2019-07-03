@@ -86,7 +86,7 @@ class ErrorHandler
         }
 
         Hub::getCurrent()->configureScope(function (Scope $scope) use ($exception, $extraData): void {
-            $scope->setUser(['username' => $this->getCurrentUserName()]);
+            $scope->setUser(['username' => $this->getCurrentUsername()]);
             $scope->setTag('code', (string)$exception->getCode());
 
             foreach ($extraData as $extraDataKey => $extraDataValue) {
