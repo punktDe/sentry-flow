@@ -23,6 +23,28 @@ PunktDe:
       dsn: 'https://public_key@your-sentry-server.com/project-id'
 ```
 
+You can also set the Sentry Environment to filter your exceptions by e.g. dev-/staging-/live-system. 
+Set the env variable `SENTRY_ENVIRONMENT` or add your value to your `Settings.yaml`: 
+
+```yaml
+PunktDe:
+  Sentry:
+    Flow:
+      environment: 'live'
+```
+
+Furthermore you can set the Sentry Release version to help to identifiy with which release an error occurred the first time.
+By default, a file which is starting with the name `RELEASE_` is searched and the values after `RELEASE_` is used for Sentry.
+Alternatively you can override the filebased release number and set an environment variable `SENTRY_RELEASE` or add your value to your `Settings.yaml`: 
+
+```yaml
+PunktDe:
+  Sentry:
+    Flow:
+      release: '5.0.3'
+```     
+
+
 ## Usage
 
 Sentry will log all exceptions that have the rendering option `logException` enabled. This can be enabled or disabled

@@ -14,6 +14,7 @@ namespace PunktDe\Sentry\Flow\Handler;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Error\WithReferenceCodeInterface;
+use Neos\Flow\Package\PackageManagerInterface;
 use Neos\Flow\Security\Context;
 use Neos\Flow\Utility\Environment;
 use Sentry\State\Hub;
@@ -33,15 +34,27 @@ class ErrorHandler
     /**
      * @var string
      */
+    protected $release;
+
+    /**
+     * @var string
+     */
     protected $environment;
+
+    /**
+     * @Flow\Inject
+     * @var PackageManagerInterface
+     */
+    protected $packageManager;
 
     /**
      * @param array $settings
      */
-    public function injectSettings(array $settings)
+    public function injectSettings(array $settings): void
     {
         $this->dsn = $settings['dsn'] ?? '';
         $this->environment = $settings['environment'] ?? '';
+        $this->release = $settings['release'] ?? '';
     }
 
     /**
@@ -52,13 +65,33 @@ class ErrorHandler
         if (empty($this->dsn)) {
             return;
         }
-        \Sentry\init(['dsn' => $this->dsn]);
 
-        $options = Hub::getCurrent()->getClient()->getOptions();
-        $options->setEnvironment($this->environment);
-        $options->setRelease($this->getReleaseFromReleaseFile());
-        $options->setProjectRoot(FLOW_PATH_ROOT);
-        $options->setPrefixes([FLOW_PATH_ROOT]);
+        if (empty($this->release)) {
+            $this->release = $this->getReleaseFromReleaseFile();
+        }
+
+        \Sentry\init([
+            'dsn' => $this->dsn,
+            'environment' => $this->environment,
+            'release' => $this->release,
+            'project_root' => FLOW_PATH_ROOT,
+            'prefixes' => [FLOW_PATH_ROOT],
+            'sample_rate' => 1,
+            'in_app_exclude' => [
+                FLOW_PATH_ROOT . '/Packages/Application/Flownative.Sentry/Classes/',
+                FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Aop/',
+                FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Error/',
+                FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Log/',
+                FLOW_PATH_ROOT . '/Packages/Libraries/neos/flow-log/'
+            ],
+            'default_integrations' => false,
+            'attach_stacktrace' => true
+        ]);
+
+        $client = Hub::getCurrent()->getClient();
+        if (!$client) {
+            return;
+        }
 
         $this->setTags();
 
@@ -102,10 +135,20 @@ class ErrorHandler
      */
     private function setTags(): void
     {
-        Hub::getCurrent()->configureScope(function (Scope $scope): void {
-            $scope->setTag('php_version', phpversion());
+        $flowVersion = FLOW_VERSION_BRANCH;
+        if ($this->packageManager) {
+            $flowPackage = $this->packageManager->getPackage('Neos.Flow');
+            $flowVersion = $flowPackage->getInstalledVersion();
+        }
+        Hub::getCurrent()->configureScope(static function (Scope $scope) use ($flowVersion): void {
+            $scope->setTag('flow_version', $flowVersion);
             $scope->setTag('flow_context', (string)Bootstrap::$staticObjectManager->get(Environment::class)->getContext());
-            $scope->setTag('flow_version', FLOW_VERSION_BRANCH);
+            $scope->setTag('php_version', PHP_VERSION);
+            $scope->setTag('php_process_inode',(string)getmyinode());
+            $scope->setTag('php_process_pid',(string)getmypid());
+            $scope->setTag('php_process_uid',(string)getmyuid());
+            $scope->setTag('php_process_gid',(string)getmygid());
+            $scope->setTag('php_process_user',get_current_user());
         });
     }
 
