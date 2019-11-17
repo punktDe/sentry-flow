@@ -17,6 +17,7 @@ use Neos\Flow\Error\WithReferenceCodeInterface;
 use Neos\Flow\Package\PackageManager;
 use Neos\Flow\Security\Context;
 use Neos\Flow\Utility\Environment;
+use Sentry\ClientInterface;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 
@@ -131,24 +132,37 @@ class ErrorHandler
     }
 
     /**
-      * Set tags on the Sentry client context
+     * @return ClientInterface|null
+     */
+    public function getSentryClient(): ?ClientInterface
+    {
+        return Hub::getCurrent()->getClient();
+    }
+
+    /**
+     * @Flow\Signal
+     * @return void
+     */
+    public function emitSentryClientCreated(): void
+    {
+    }
+
+    /**
+     * Set tags on the Sentry client context
      */
     private function setTags(): void
     {
-        $flowVersion = FLOW_VERSION_BRANCH;
-        if ($this->packageManager) {
-            $flowPackage = $this->packageManager->getPackage('Neos.Flow');
-            $flowVersion = $flowPackage->getInstalledVersion();
-        }
+        $flowVersion = $this->determineFlowVersion();
+
         Hub::getCurrent()->configureScope(static function (Scope $scope) use ($flowVersion): void {
             $scope->setTag('flow_version', $flowVersion);
             $scope->setTag('flow_context', (string)Bootstrap::$staticObjectManager->get(Environment::class)->getContext());
             $scope->setTag('php_version', PHP_VERSION);
-            $scope->setTag('php_process_inode',(string)getmyinode());
-            $scope->setTag('php_process_pid',(string)getmypid());
-            $scope->setTag('php_process_uid',(string)getmyuid());
-            $scope->setTag('php_process_gid',(string)getmygid());
-            $scope->setTag('php_process_user',get_current_user());
+            $scope->setTag('php_process_inode', (string)getmyinode());
+            $scope->setTag('php_process_pid', (string)getmypid());
+            $scope->setTag('php_process_uid', (string)getmyuid());
+            $scope->setTag('php_process_gid', (string)getmygid());
+            $scope->setTag('php_process_user', get_current_user());
         });
     }
 
@@ -192,10 +206,18 @@ class ErrorHandler
     }
 
     /**
-     * @Flow\Signal
-     * @return void
+     * @return string
      */
-    public function emitSentryClientCreated(): void
+    private function determineFlowVersion(): string
     {
+        $flowVersion = FLOW_VERSION_BRANCH;
+
+        if ($this->packageManager instanceof PackageManager) {
+            try {
+                $flowVersion = $this->packageManager->getPackage('Neos.Flow')->getInstalledVersion();
+            } catch (\Exception $exception) {
+            }
+        }
+        return $flowVersion;
     }
 }

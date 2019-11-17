@@ -14,12 +14,20 @@ namespace PunktDe\Sentry\Flow\Command;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
 use PunktDe\Sentry\Flow\Exception\SentryTestException;
+use PunktDe\Sentry\Flow\Handler\ErrorHandler;
+use Sentry\ClientInterface;
 
 /**
  * @Flow\Scope("singleton")
  */
 class SentryCommandController extends CommandController
 {
+
+    /**
+     * @Flow\Inject()
+     * @var ErrorHandler
+     */
+    protected $errorHandler;
 
     /**
      * @Flow\InjectConfiguration(path="dsn")
@@ -34,9 +42,31 @@ class SentryCommandController extends CommandController
      */
     public function testCommand(): void
     {
+
+        $sentryClient = $this->errorHandler->getSentryClient();
+        if ($sentryClient instanceof ClientInterface) {
+
+            $this->outputLine('<b>Sentry is configured with the following options:</b>');
+            $this->outputLine();
+
+            $options = $sentryClient->getOptions();
+
+            $this->output->outputTable([
+                ['URL', $options->getDsn()],
+                ['Environment', $options->getEnvironment()],
+                ['Release', $options->getRelease()],
+                ['Project Id', $options->getProjectId()]
+            ], [
+                'Option',
+                'Value'
+            ]);
+        } else {
+            $this->outputLine('<error>The Sentry client could not be initialized properly. Please check your configuration.</error>');
+            $this->sendAndExit(1);
+        }
+
+        $this->outputLine();
         $this->outputLine(sprintf("<b>Triggering a test exception which is send to the DSN '%s'</b>\n\n", $this->sentryDsn));
-
-
 
         throw new SentryTestException('This is a sentry test exception.', 1516900282);
     }
