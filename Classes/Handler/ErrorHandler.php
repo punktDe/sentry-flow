@@ -14,7 +14,7 @@ namespace PunktDe\Sentry\Flow\Handler;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Error\WithReferenceCodeInterface;
-use Neos\Flow\Package\PackageManagerInterface;
+use Neos\Flow\Package\PackageManager;
 use Neos\Flow\Security\Context;
 use Neos\Flow\Utility\Environment;
 use Sentry\State\Hub;
@@ -43,7 +43,7 @@ class ErrorHandler
 
     /**
      * @Flow\Inject
-     * @var PackageManagerInterface
+     * @var PackageManager
      */
     protected $packageManager;
 
@@ -60,7 +60,7 @@ class ErrorHandler
     /**
      * Initialize the raven client and fatal error handler (shutdown function)
      */
-    public function initializeObject()
+    public function initializeObject(): void
     {
         if (empty($this->dsn)) {
             return;
@@ -195,7 +195,7 @@ class ErrorHandler
      * @Flow\Signal
      * @return void
      */
-    public function emitSentryClientCreated()
+    public function emitSentryClientCreated(): void
     {
     }
 }

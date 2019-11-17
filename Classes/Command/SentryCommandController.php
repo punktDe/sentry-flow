@@ -20,6 +20,7 @@ use PunktDe\Sentry\Flow\Exception\SentryTestException;
  */
 class SentryCommandController extends CommandController
 {
+
     /**
      * @Flow\InjectConfiguration(path="dsn")
      * @var string
@@ -31,9 +32,11 @@ class SentryCommandController extends CommandController
      *
      * @throws SentryTestException
      */
-    public function testCommand()
+    public function testCommand(): void
     {
         $this->outputLine(sprintf("<b>Triggering a test exception which is send to the DSN '%s'</b>\n\n", $this->sentryDsn));
+
+
 
         throw new SentryTestException('This is a sentry test exception.', 1516900282);
     }

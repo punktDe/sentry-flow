@@ -17,13 +17,13 @@ use Neos\Flow\ObjectManagement\ObjectManagerInterface;
 trait ExceptionHandlerTrait
 {
 
-    public function echoExceptionWeb($exception)
+    public function echoExceptionWeb($exception): void
     {
         $this->sendExceptionToSentry($exception);
         parent::echoExceptionWeb($exception);
     }
 
-    public function echoExceptionCli(\Throwable $exception)
+    public function echoExceptionCli(\Throwable $exception): void
     {
         $this->sendExceptionToSentry($exception);
         parent::echoExceptionCli($exception);
