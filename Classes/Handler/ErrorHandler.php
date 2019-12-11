@@ -14,12 +14,16 @@ namespace PunktDe\Sentry\Flow\Handler;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Error\WithReferenceCodeInterface;
+use Neos\Flow\ObjectManagement\ObjectManager;
 use Neos\Flow\Package\PackageManager;
 use Neos\Flow\Security\Context;
 use Neos\Flow\Utility\Environment;
+use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
+use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Transport\TransportInterface;
 
 /**
  * @Flow\Scope("singleton")
@@ -49,6 +53,17 @@ class ErrorHandler
     protected $packageManager;
 
     /**
+     * @var string
+     */
+    protected $transportClass;
+
+    /**
+     * @Flow\Inject
+     * @var ObjectManager
+     */
+    protected $objectManager;
+
+    /**
      * @param array $settings
      */
     public function injectSettings(array $settings): void
@@ -56,10 +71,11 @@ class ErrorHandler
         $this->dsn = $settings['dsn'] ?? '';
         $this->environment = $settings['environment'] ?? '';
         $this->release = $settings['release'] ?? '';
+        $this->transportClass = $settings['transportClass'] ?? '';
     }
 
     /**
-     * Initialize the raven client and fatal error handler (shutdown function)
+     * Initialize the sentry client and fatal error handler (shutdown function)
      */
     public function initializeObject(): void
     {
@@ -71,28 +87,35 @@ class ErrorHandler
             $this->release = $this->getReleaseFromReleaseFile();
         }
 
-        \Sentry\init([
-            'dsn' => $this->dsn,
-            'environment' => $this->environment,
-            'release' => $this->release,
-            'project_root' => FLOW_PATH_ROOT,
-            'prefixes' => [FLOW_PATH_ROOT],
-            'sample_rate' => 1,
-            'in_app_exclude' => [
-                FLOW_PATH_ROOT . '/Packages/Application/Flownative.Sentry/Classes/',
-                FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Aop/',
-                FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Error/',
-                FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Log/',
-                FLOW_PATH_ROOT . '/Packages/Libraries/neos/flow-log/'
-            ],
-            'default_integrations' => false,
-            'attach_stacktrace' => true
-        ]);
+        $clientBuilder = ClientBuilder::create(
+            [
+                'dsn' => $this->dsn,
+                'environment' => $this->environment,
+                'release' => $this->release,
+                'project_root' => FLOW_PATH_ROOT,
+                'prefixes' => [FLOW_PATH_ROOT],
+                'sample_rate' => 1,
+                'in_app_exclude' => [
+                    FLOW_PATH_ROOT . '/Packages/Application/PunktDe.Sentry.Flow/Classes/',
+                    FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Aop/',
+                    FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Error/',
+                    FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Log/',
+                    FLOW_PATH_ROOT . '/Packages/Libraries/neos/flow-log/'
+                ],
+                'default_integrations' => false,
+                'attach_stacktrace' => true
+            ]
+        );
 
-        $client = Hub::getCurrent()->getClient();
-        if (!$client) {
-            return;
+        if ($this->transportClass !== '') {
+            /** @var TransportInterface $transport */
+            $transport = $this->objectManager->get($this->transportClass);
+            $clientBuilder->setTransport($transport);
         }
+
+        $client = $clientBuilder->getClient();
+
+        SentrySdk::init()->bindClient($client);
 
         $this->setTags();
 

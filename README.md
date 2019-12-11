@@ -23,8 +23,8 @@ PunktDe:
       dsn: 'https://public_key@your-sentry-server.com/project-id'
 ```
 
-You can also set the Sentry Environment to filter your exceptions by e.g. dev-/staging-/live-system. 
-Set the env variable `SENTRY_ENVIRONMENT` or add your value to your `Settings.yaml`: 
+You can also set the Sentry Environment to filter your exceptions by e.g. dev-/staging-/live-system.
+Set the env variable `SENTRY_ENVIRONMENT` or add your value to your `Settings.yaml`:
 
 ```yaml
 PunktDe:
@@ -35,15 +35,54 @@ PunktDe:
 
 Furthermore you can set the Sentry Release version to help to identifiy with which release an error occurred the first time.
 By default, a file which is starting with the name `RELEASE_` is searched and the values after `RELEASE_` is used for Sentry.
-Alternatively you can override the filebased release number and set an environment variable `SENTRY_RELEASE` or add your value to your `Settings.yaml`: 
+Alternatively you can override the filebased release number and set an environment variable `SENTRY_RELEASE` or add your value to your `Settings.yaml`:
 
 ```yaml
 PunktDe:
   Sentry:
     Flow:
       release: '5.0.3'
-```     
+```
+If you need to use a custom transport e.g. to write the sentry reports to a file, you must implement the `Sentry\TransportInterface`:
 
+```php
+<?php
+declare(strict_types=1);
+
+namespace Vendor\Package\Sentry\Transport;
+
+use Sentry\Event;
+use Sentry\Exception\JsonException;
+use Sentry\Transport\TransportInterface;
+use Sentry\Util\JSON;
+
+class FileWriterTransport implements TransportInterface
+{
+    /**
+     * @param Event $event
+     *
+     * @return string|null Returns the ID of the event or `null` if it failed to be sent
+     *
+     * @throws JsonException
+     */
+    public function send(Event $event): ?string
+    {
+        if (file_put_contents('My\Path\And\FileName', JSON::encode($event)) !== false) {
+            return $event->getId();
+        }
+        return null;
+    }
+}
+```
+
+Then you configure the class to be used:
+
+```yaml
+PunktDe:
+  Sentry:
+    Flow:
+      transportClass: '\Vendor\Package\Sentry\Transport\FileWriterTransport'
+```
 
 ## Usage
 

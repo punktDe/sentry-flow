@@ -4,6 +4,8 @@ PunktDe:
       dsn: '%env:SENTRY_DSN%'
       environment: '%env:SENTRY_ENVIRONMENT%'
       release: '%env:SENTRY_RELEASE%'
+      #Please implement the Sentry\TransportInterface and configure the classname here, if you want to use a custom transport functionality
+      #transportClass: '\Vendor\Package\SentryTransportInterfaceImplementation'
 Neos:
   Flow:
     error:
