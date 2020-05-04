@@ -102,7 +102,7 @@ class ErrorHandler
                     FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Log/',
                     FLOW_PATH_ROOT . '/Packages/Libraries/neos/flow-log/'
                 ],
-                'default_integrations' => false,
+                'default_integrations' => true,
                 'attach_stacktrace' => true
             ]
         );
