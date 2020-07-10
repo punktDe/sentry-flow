@@ -37,14 +37,9 @@ class ErrorHandler
     protected $dsn;
 
     /**
-     * @var string
+     * @var array
      */
-    protected $release;
-
-    /**
-     * @var string
-     */
-    protected $environment;
+    protected $settings;
 
     /**
      * @Flow\Inject
@@ -68,9 +63,8 @@ class ErrorHandler
      */
     public function injectSettings(array $settings): void
     {
+        $this->settings = $settings;
         $this->dsn = $settings['dsn'] ?? '';
-        $this->environment = $settings['environment'] ?? '';
-        $this->release = $settings['release'] ?? '';
         $this->transportClass = $settings['transportClass'] ?? '';
     }
 
@@ -83,18 +77,20 @@ class ErrorHandler
             return;
         }
 
-        if (empty($this->release)) {
-            $this->release = $this->getReleaseFromReleaseFile();
+        $release = $this->settings['release'] ?? '';
+        if (empty($release)) {
+            $release = $this->getReleaseFromReleaseFile();
         }
 
         $clientBuilder = ClientBuilder::create(
             [
                 'dsn' => $this->dsn,
-                'environment' => $this->environment,
-                'release' => $this->release,
+                'environment' => $settings['environment'] ?? '',
+                'release' => $release,
                 'project_root' => FLOW_PATH_ROOT,
+                'http_proxy' => $settings['http_proxy'] ?? '',
                 'prefixes' => [FLOW_PATH_ROOT],
-                'sample_rate' => 1,
+                'sample_rate' => $settings['sample_rate'] ?? 1,
                 'in_app_exclude' => [
                     FLOW_PATH_ROOT . '/Packages/Application/PunktDe.Sentry.Flow/Classes/',
                     FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Aop/',
@@ -102,8 +98,8 @@ class ErrorHandler
                     FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Log/',
                     FLOW_PATH_ROOT . '/Packages/Libraries/neos/flow-log/'
                 ],
-                'default_integrations' => true,
-                'attach_stacktrace' => true
+                'default_integrations' => $settings['default_integrations'] ?? true,
+                'attach_stacktrace' => $settings['attach_stacktrace'] ?? true,
             ]
         );
 
