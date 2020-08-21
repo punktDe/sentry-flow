@@ -64,7 +64,7 @@ class ErrorHandler
     public function injectSettings(array $settings): void
     {
         $this->settings = $settings;
-        $this->dsn = $settings['dsn'];
+        $this->dsn = $settings['dsn'] ? $settings['dsn'] : '';
         $this->transportClass = $settings['transportClass'] ?? '';
     }
 
@@ -77,7 +77,7 @@ class ErrorHandler
             return;
         }
 
-        $release = $this->settings['release'];
+        $release = $this->settings['release'] ? $this->settings['release'] : '';
         if (empty($release)) {
             $release = $this->getReleaseFromReleaseFile();
         }
@@ -85,10 +85,10 @@ class ErrorHandler
         $clientBuilder = ClientBuilder::create(
             [
                 'dsn' => $this->dsn,
-                'environment' => $this->settings['environment'],
+                'environment' => $this->settings['environment'] ? $this->settings['environment'] : '',
                 'release' => $release,
                 'project_root' => FLOW_PATH_ROOT,
-                'http_proxy' => $this->settings['http_proxy'],
+                'http_proxy' => $this->settings['http_proxy'] ? $this->settings['http_proxy'] : '',
                 'prefixes' => [FLOW_PATH_ROOT],
                 'sample_rate' => $this->settings['sample_rate'],
                 'in_app_exclude' => [
