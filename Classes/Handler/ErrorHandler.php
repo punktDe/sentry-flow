@@ -85,12 +85,12 @@ class ErrorHandler
         $clientBuilder = ClientBuilder::create(
             [
                 'dsn' => $this->dsn,
-                'environment' => $settings['environment'] ?? '',
+                'environment' => $this->settings['environment'] ?? '',
                 'release' => $release,
                 'project_root' => FLOW_PATH_ROOT,
-                'http_proxy' => $settings['http_proxy'] ?? '',
+                'http_proxy' => $this->settings['http_proxy'] ?? '',
                 'prefixes' => [FLOW_PATH_ROOT],
-                'sample_rate' => $settings['sample_rate'] ?? 1,
+                'sample_rate' => $this->settings['sample_rate'] ?? 1,
                 'in_app_exclude' => [
                     FLOW_PATH_ROOT . '/Packages/Application/PunktDe.Sentry.Flow/Classes/',
                     FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Aop/',
@@ -98,8 +98,8 @@ class ErrorHandler
                     FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Log/',
                     FLOW_PATH_ROOT . '/Packages/Libraries/neos/flow-log/'
                 ],
-                'default_integrations' => $settings['default_integrations'] ?? true,
-                'attach_stacktrace' => $settings['attach_stacktrace'] ?? true,
+                'default_integrations' => $this->settings['default_integrations'] ?? true,
+                'attach_stacktrace' => $this->settings['attach_stacktrace'] ?? true,
             ]
         );
 
