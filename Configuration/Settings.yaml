@@ -4,7 +4,7 @@ PunktDe:
       dsn: '%env:SENTRY_DSN%'
       environment: '%env:SENTRY_ENVIRONMENT%'
       release: '%env:SENTRY_RELEASE%'
-      http_proxy: ''
+      http_proxy: '%env:http_proxy%'
       sample_rate: 1
       default_integrations: true
       attach_stacktrace: true
