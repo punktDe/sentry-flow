@@ -82,13 +82,18 @@ class ErrorHandler
             $release = $this->getReleaseFromReleaseFile();
         }
 
+        $http_proxy = $this->settings['http_proxy'] ? $this->settings['http_proxy'] : '';
+        if ($http_proxy === '%env:http_proxy%') {
+            $http_proxy = '';
+        }
+
         $clientBuilder = ClientBuilder::create(
             [
                 'dsn' => $this->dsn,
                 'environment' => $this->settings['environment'] ? $this->settings['environment'] : '',
                 'release' => $release,
                 'project_root' => FLOW_PATH_ROOT,
-                'http_proxy' => $this->settings['http_proxy'] ? $this->settings['http_proxy'] : '',
+                'http_proxy' => $http_proxy,
                 'prefixes' => [FLOW_PATH_ROOT],
                 'sample_rate' => $this->settings['sample_rate'],
                 'in_app_exclude' => [
