@@ -52,10 +52,10 @@ class SentryCommandController extends CommandController
             $options = $sentryClient->getOptions();
 
             $this->output->outputTable([
-                ['URL', $options->getDsn()],
+                ['DSN', $options->getDsn()],
                 ['Environment', $options->getEnvironment()],
                 ['Release', $options->getRelease()],
-                ['Project Id', $options->getProjectId()]
+                ['Tags', implode(', ',$options->getTags())],
             ], [
                 'Option',
                 'Value'
