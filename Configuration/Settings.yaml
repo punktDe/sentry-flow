@@ -9,7 +9,7 @@ PunktDe:
       default_integrations: true
       attach_stacktrace: true
       #Please implement the Sentry\TransportInterface and configure the classname here, if you want to use a custom transport functionality
-      #transportClass: '\Vendor\Package\SentryTransportInterfaceImplementation'
+      #transportFactoryClass: '\Vendor\Package\SentryTransportFactoryInterfaceImplementation'
 Neos:
   Flow:
     error:

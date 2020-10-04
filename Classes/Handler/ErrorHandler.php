@@ -11,19 +11,25 @@ namespace PunktDe\Sentry\Flow\Handler;
  * source code.
  */
 
+use Exception;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Configuration\Exception\InvalidConfigurationTypeException;
 use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Error\WithReferenceCodeInterface;
+use Neos\Flow\ObjectManagement\Exception\CannotBuildObjectException;
+use Neos\Flow\ObjectManagement\Exception\UnknownObjectException;
 use Neos\Flow\ObjectManagement\ObjectManager;
 use Neos\Flow\Package\PackageManager;
 use Neos\Flow\Security\Context;
 use Neos\Flow\Utility\Environment;
 use Sentry\ClientBuilder;
+use Sentry\ClientBuilderInterface;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
-use Sentry\Transport\TransportInterface;
+use Sentry\Transport\TransportFactoryInterface;
+use Throwable;
+use function Sentry\captureException;
 
 /**
  * @Flow\Scope("singleton")
@@ -50,7 +56,7 @@ class ErrorHandler
     /**
      * @var string
      */
-    protected $transportClass;
+    protected $transportFactoryClass;
 
     /**
      * @Flow\Inject
@@ -64,8 +70,8 @@ class ErrorHandler
     public function injectSettings(array $settings): void
     {
         $this->settings = $settings;
-        $this->dsn = $settings['dsn'] ? $settings['dsn'] : '';
-        $this->transportClass = $settings['transportClass'] ?? '';
+        $this->dsn = $settings['dsn'] ?: '';
+        $this->transportFactoryClass = $settings['transportFactoryClass'] ?? '';
     }
 
     /**
@@ -77,12 +83,12 @@ class ErrorHandler
             return;
         }
 
-        $release = $this->settings['release'] ? $this->settings['release'] : '';
+        $release = $this->settings['release'] ?? '';
         if (empty($release)) {
             $release = $this->getReleaseFromReleaseFile();
         }
 
-        $http_proxy = $this->settings['http_proxy'] ? $this->settings['http_proxy'] : '';
+        $http_proxy = $this->settings['http_proxy'] ?? '';
         if ($http_proxy === '%env:http_proxy%') {
             $http_proxy = '';
         }
@@ -90,9 +96,8 @@ class ErrorHandler
         $clientBuilder = ClientBuilder::create(
             [
                 'dsn' => $this->dsn,
-                'environment' => $this->settings['environment'] ? $this->settings['environment'] : '',
+                'environment' => $this->settings['environment'] ?? '',
                 'release' => $release,
-                'project_root' => FLOW_PATH_ROOT,
                 'http_proxy' => $http_proxy,
                 'prefixes' => [FLOW_PATH_ROOT],
                 'sample_rate' => $this->settings['sample_rate'],
@@ -108,11 +113,7 @@ class ErrorHandler
             ]
         );
 
-        if ($this->transportClass !== '') {
-            /** @var TransportInterface $transport */
-            $transport = $this->objectManager->get($this->transportClass);
-            $clientBuilder->setTransport($transport);
-        }
+        $this->setCustomTransportIfconfigured($clientBuilder);
 
         $client = $clientBuilder->getClient();
 
@@ -135,7 +136,7 @@ class ErrorHandler
             return;
         }
 
-        if (!$exception instanceof \Throwable) {
+        if (!$exception instanceof Throwable) {
             return;
         }
 
@@ -143,7 +144,7 @@ class ErrorHandler
             $extraData['referenceCode'] = $exception->getReferenceCode();
         }
 
-        Hub::getCurrent()->configureScope(function (Scope $scope) use ($exception, $extraData): void {
+        SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($exception, $extraData): void {
             $scope->setUser(['username' => $this->getCurrentUsername()]);
             $scope->setTag('code', (string)$exception->getCode());
 
@@ -152,7 +153,7 @@ class ErrorHandler
             }
         });
 
-        \Sentry\captureException($exception);
+        captureException($exception);
     }
 
     /**
@@ -160,7 +161,7 @@ class ErrorHandler
      */
     public function getSentryClient(): ?ClientInterface
     {
-        return Hub::getCurrent()->getClient();
+        return SentrySdk::getCurrentHub()->getClient();
     }
 
     /**
@@ -178,7 +179,7 @@ class ErrorHandler
     {
         $flowVersion = $this->determineFlowVersion();
 
-        Hub::getCurrent()->configureScope(static function (Scope $scope) use ($flowVersion): void {
+        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($flowVersion): void {
             $scope->setTag('flow_version', $flowVersion);
             $scope->setTag('flow_context', (string)Bootstrap::$staticObjectManager->get(Environment::class)->getContext());
             $scope->setTag('php_version', PHP_VERSION);
@@ -239,9 +240,29 @@ class ErrorHandler
         if ($this->packageManager instanceof PackageManager) {
             try {
                 $flowVersion = $this->packageManager->getPackage('Neos.Flow')->getInstalledVersion();
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
             }
         }
         return $flowVersion;
+    }
+
+    /**
+     * @param ClientBuilderInterface $clientBuilder
+     * @throws InvalidConfigurationTypeException
+     * @throws CannotBuildObjectException
+     * @throws UnknownObjectException
+     */
+    private function setCustomTransportIfconfigured(ClientBuilderInterface $clientBuilder): void
+    {
+        if ($this->transportFactoryClass === '') {
+            return;
+        }
+
+        /** @var TransportFactoryInterface $transportFactory */
+        $transportFactory = $this->objectManager->get($this->transportFactoryClass);
+
+        if ($transportFactory instanceof TransportFactoryInterface) {
+            $clientBuilder->setTransportFactory($transportFactory);
+        }
     }
 }
