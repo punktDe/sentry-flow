@@ -23,7 +23,7 @@ class CatchableViewHelperExceptionAspect
 
     /**
      * @Flow\Inject
-     * @var \PunktDe\Sentry\Flow\Handler\ErrorHandler
+     * @var \PunktDe\Sentry\Flow\SentryClient
      */
     protected $errorHandler;
 
@@ -31,10 +31,9 @@ class CatchableViewHelperExceptionAspect
      * @Flow\AfterThrowing("within(Neos\FluidAdaptor\Core\ViewHelper\AbstractViewHelper) && method(.*->render())")
      * @param JoinPoint $joinPoint
      */
-    public function catchException(JoinPoint $joinPoint)
+    public function catchException(JoinPoint $joinPoint): void
     {
         $exception = $joinPoint->getException();
         $this->errorHandler->handleException($exception);
     }
-
 }

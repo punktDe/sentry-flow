@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace PunktDe\Sentry\Flow\Handler;
+namespace PunktDe\Sentry\Flow;
 
 /*
  * This file is part of the PunktDe.Sentry.Flow package.
@@ -34,7 +34,7 @@ use function Sentry\captureException;
 /**
  * @Flow\Scope("singleton")
  */
-class ErrorHandler
+class SentryClient
 {
 
     /**
@@ -113,7 +113,7 @@ class ErrorHandler
             ]
         );
 
-        $this->setCustomTransportIfconfigured($clientBuilder);
+        $this->setCustomTransportIfConfigured($clientBuilder);
 
         $client = $clientBuilder->getClient();
 
@@ -252,7 +252,7 @@ class ErrorHandler
      * @throws CannotBuildObjectException
      * @throws UnknownObjectException
      */
-    private function setCustomTransportIfconfigured(ClientBuilderInterface $clientBuilder): void
+    private function setCustomTransportIfConfigured(ClientBuilderInterface $clientBuilder): void
     {
         if ($this->transportFactoryClass === '') {
             return;

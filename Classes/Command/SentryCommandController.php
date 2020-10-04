@@ -14,7 +14,7 @@ namespace PunktDe\Sentry\Flow\Command;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
 use PunktDe\Sentry\Flow\Exception\SentryTestException;
-use PunktDe\Sentry\Flow\Handler\ErrorHandler;
+use PunktDe\Sentry\Flow\SentryClient;
 use Sentry\ClientInterface;
 
 /**
@@ -25,7 +25,7 @@ class SentryCommandController extends CommandController
 
     /**
      * @Flow\Inject()
-     * @var ErrorHandler
+     * @var SentryClient
      */
     protected $errorHandler;
 
@@ -55,7 +55,7 @@ class SentryCommandController extends CommandController
                 ['DSN', $options->getDsn()],
                 ['Environment', $options->getEnvironment()],
                 ['Release', $options->getRelease()],
-                ['Tags', implode(', ',$options->getTags())],
+                ['Tags', implode(', ', $options->getTags())],
             ], [
                 'Option',
                 'Value'
