@@ -5,7 +5,7 @@
     "license": "MIT",
     "require": {
         "neos/flow": "^5.0 || ^6.0",
-        "sentry/sentry": "^2.1",
+        "sentry/sdk": "^3.0",
         "php-http/guzzle6-adapter": "^v2.0"
     },
     "autoload": {

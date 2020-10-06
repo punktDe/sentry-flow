@@ -12,6 +12,15 @@ Have a look at https://sentry.io for more information about Sentry.
 $ composer require punktde/sentry-flow
 ```
 
+### Compatibilty matrix
+
+| Flow Sentry Client | Flow           | Sentry SDK | Sentry Server |
+|--------------------|----------------|------------|---------------|
+| ^1.0               | ^4.0           | ^1.0       | *             |
+| ^2.0               | ^5.0           | ^1.0       | *             |
+| ^3.0               | ^5.0, ^6.0     | ^2.0       | *             |
+| ^4.0               | ^5.0, ^6.0     | ^3.0       | >= v20.6.0    |
+
 ## Configuration
 
 Add the following to your `Settings.yaml` and replace the `dsn` setting with your project DSN (API Keys in your Sentry project):

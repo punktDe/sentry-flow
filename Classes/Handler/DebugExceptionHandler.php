@@ -12,7 +12,5 @@ namespace PunktDe\Sentry\Flow\Handler;
 
 class DebugExceptionHandler extends \Neos\Flow\Error\DebugExceptionHandler
 {
-
     use ExceptionHandlerTrait;
-
 }

@@ -13,6 +13,7 @@ namespace PunktDe\Sentry\Flow\Handler;
 
 use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\ObjectManagement\ObjectManagerInterface;
+use PunktDe\Sentry\Flow\SentryClient;
 
 trait ExceptionHandlerTrait
 {
@@ -32,26 +33,26 @@ trait ExceptionHandlerTrait
     /**
      * Send an exception to Sentry, but only if the "logException" rendering option is TRUE
      *
-     * During compiletime there might be missing dependencies, so we need additional safeguards to
+     * During compile time there might be missing dependencies, so we need additional safeguards to
      * not cause errors.
      *
-     * @param object $exception \Exception or \Throwable
+     * @param \Throwable $throwable
      */
-    protected function sendExceptionToSentry($exception): void
+    protected function sendExceptionToSentry(\Throwable $throwable): void
     {
         if (!Bootstrap::$staticObjectManager instanceof ObjectManagerInterface) {
             return;
         }
 
-        $options = $this->resolveCustomRenderingOptions($exception);
+        $options = $this->resolveCustomRenderingOptions($throwable);
         if (isset($options['logException']) && $options['logException']) {
             try {
-                /** @var ErrorHandler $errorHandler */
-                $errorHandler = Bootstrap::$staticObjectManager->get(ErrorHandler::class);
+                /** @var SentryClient $errorHandler */
+                $errorHandler = Bootstrap::$staticObjectManager->get(SentryClient::class);
                 if ($errorHandler !== null) {
-                    $errorHandler->handleException($exception);
+                    $errorHandler->handleException($throwable);
                 }
-            } catch (\Exception $exception) {
+            } catch (\Exception $throwable) {
                 // Quick'n dirty workaround to catch exception with the error handler is called during compile time
             }
         }
