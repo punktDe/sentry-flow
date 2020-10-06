@@ -83,7 +83,7 @@ class SentryClient
             return;
         }
 
-        $release = $this->settings['release'] ?? '';
+        $release = $this->settings['release'] ?: '';
         if (empty($release)) {
             $release = $this->getReleaseFromReleaseFile();
         }
