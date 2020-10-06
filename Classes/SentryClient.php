@@ -71,7 +71,7 @@ class SentryClient
     {
         $this->settings = $settings;
         $this->dsn = $settings['dsn'] ?: '';
-        $this->transportFactoryClass = $settings['transportFactoryClass'] ?? '';
+        $this->transportFactoryClass = $settings['transportFactoryClass'] ?: '';
     }
 
     /**
@@ -88,7 +88,7 @@ class SentryClient
             $release = $this->getReleaseFromReleaseFile();
         }
 
-        $http_proxy = $this->settings['http_proxy'] ?? '';
+        $http_proxy = $this->settings['http_proxy'] ?: '';
         if ($http_proxy === '%env:http_proxy%') {
             $http_proxy = '';
         }
@@ -96,11 +96,11 @@ class SentryClient
         $clientBuilder = ClientBuilder::create(
             [
                 'dsn' => $this->dsn,
-                'environment' => $this->settings['environment'] ?? '',
+                'environment' => $this->settings['environment'] ?: '',
                 'release' => $release,
                 'http_proxy' => $http_proxy,
                 'prefixes' => [FLOW_PATH_ROOT],
-                'sample_rate' => $this->settings['sample_rate'],
+                'sample_rate' => $this->settings['sample_rate'] ?: 1,
                 'in_app_exclude' => [
                     FLOW_PATH_ROOT . '/Packages/Application/PunktDe.Sentry.Flow/Classes/',
                     FLOW_PATH_ROOT . '/Packages/Framework/Neos.Flow/Classes/Aop/',
