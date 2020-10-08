@@ -71,7 +71,7 @@ class SentryClient
     {
         $this->settings = $settings;
         $this->dsn = $settings['dsn'] ?: '';
-        $this->transportFactoryClass = $settings['transportFactoryClass'] ?: '';
+        $this->transportFactoryClass = $settings['transportFactoryClass'] ?? '';
     }
 
     /**
