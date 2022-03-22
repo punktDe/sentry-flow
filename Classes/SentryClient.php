@@ -26,10 +26,12 @@ use Sentry\ClientBuilder;
 use Sentry\ClientBuilderInterface;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
+use Sentry\Severity;
 use Sentry\State\Scope;
 use Sentry\Transport\TransportFactoryInterface;
 use Throwable;
 use function Sentry\captureException;
+use function Sentry\captureMessage;
 
 /**
  * @Flow\Scope("singleton")
@@ -154,6 +156,30 @@ class SentryClient
         });
 
         captureException($exception);
+    }
+
+    /**
+     * Send a message to Sentry
+     *
+     * @param string $message The message to send
+     * @param Severity|null $severity (optional) The severity of the message
+     * @param array $extraData (optional) Additional data passed to the Sentry sample
+     */
+    public function sendMessage(string $message, Severity $severity = null, array $extraData = []): void
+    {
+        if (empty($this->dsn) || empty($message)) {
+            return;
+        }
+
+        SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($extraData): void {
+            $scope->setUser(['username' => $this->getCurrentUsername()]);
+
+            foreach ($extraData as $extraDataKey => $extraDataValue) {
+                $scope->setExtra($extraDataKey, $extraDataValue);
+            }
+        });
+
+        captureMessage($message, $severity);
     }
 
     /**
