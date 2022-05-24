@@ -164,15 +164,20 @@ class SentryClient
      * @param string $message The message to send
      * @param Severity|null $severity (optional) The severity of the message
      * @param array $extraData (optional) Additional data passed to the Sentry sample
+     * @param array $tags (optional) Tags that are passed to the Sentry sample
      */
-    public function sendMessage(string $message, Severity $severity = null, array $extraData = []): void
+    public function sendMessage(string $message, Severity $severity = null, array $extraData = [], array $tags = []): void
     {
         if (empty($this->dsn) || empty($message)) {
             return;
         }
 
-        SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($extraData): void {
+        SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($extraData, $tags): void {
             $scope->setUser(['username' => $this->getCurrentUsername()]);
+
+            foreach ($tags as $tagName => $value) {
+                $scope->setTag($tagName, $value);
+            }
 
             foreach ($extraData as $extraDataKey => $extraDataValue) {
                 $scope->setExtra($extraDataKey, $extraDataValue);
