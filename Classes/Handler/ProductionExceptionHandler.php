@@ -11,7 +11,7 @@ namespace PunktDe\Sentry\Flow\Handler;
  * source code.
  */
 
-class ProductionExceptionHandler extends \Neos\Flow\Error\ProductionExceptionHandler
+final class ProductionExceptionHandler extends \Neos\Flow\Error\ProductionExceptionHandler
 {
     use ExceptionHandlerTrait;
 }

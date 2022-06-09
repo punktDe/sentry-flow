@@ -12,23 +12,44 @@ namespace PunktDe\Sentry\Flow\Handler;
  */
 
 use Neos\Flow\Core\Bootstrap;
+use Neos\Flow\Log\ThrowableStorageInterface;
 use Neos\Flow\ObjectManagement\ObjectManagerInterface;
 use PunktDe\Sentry\Flow\SentryClient;
 
 trait ExceptionHandlerTrait
 {
 
-    public function echoExceptionWeb($exception): void
+    /**
+     * Handles the given exception
+     *
+     * @param \Throwable $exception The exception object
+     * @return void
+     */
+    public function handleException($exception)
     {
+        // Ignore if the error is suppressed by using the shut-up operator @
+        if (error_reporting() === 0) {
+            return;
+        }
+
+        $this->renderingOptions = $this->resolveCustomRenderingOptions($exception);
+
+        $exceptionWasLogged = false;
+        if ($this->throwableStorage instanceof ThrowableStorageInterface && isset($this->renderingOptions['logException']) && $this->renderingOptions['logException']) {
+            $message = $this->throwableStorage->logThrowable($exception);
+            $this->logger->critical($message);
+            $exceptionWasLogged = true;
+        }
+
         $this->sendExceptionToSentry($exception);
+
+        if (PHP_SAPI === 'cli') {
+            parent::echoExceptionCli($exception, $exceptionWasLogged);
+        }
+
         parent::echoExceptionWeb($exception);
     }
 
-    public function echoExceptionCli(\Throwable $exception): void
-    {
-        $this->sendExceptionToSentry($exception);
-        parent::echoExceptionCli($exception);
-    }
 
     /**
      * Send an exception to Sentry, but only if the "logException" rendering option is TRUE
