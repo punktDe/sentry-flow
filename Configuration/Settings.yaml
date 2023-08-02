@@ -8,6 +8,7 @@ PunktDe:
       sample_rate: 1
       default_integrations: true
       attach_stacktrace: true
+      send_default_pii: false
 
       #Please implement the Sentry\TransportInterface and configure the classname here, if you want to use a custom transport functionality
       #transportFactoryClass: '\Vendor\Package\SentryTransportFactoryInterfaceImplementation'

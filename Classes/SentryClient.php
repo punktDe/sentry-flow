@@ -112,6 +112,7 @@ class SentryClient
                 ],
                 'default_integrations' => $this->settings['default_integrations'],
                 'attach_stacktrace' => $this->settings['attach_stacktrace'],
+                'send_default_pii' => $this->settings['send_default_pii'],
             ]
         );
 
