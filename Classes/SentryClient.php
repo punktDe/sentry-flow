@@ -23,12 +23,11 @@ use Neos\Flow\Package\PackageManager;
 use Neos\Flow\Security\Context;
 use Neos\Flow\Utility\Environment;
 use Sentry\ClientBuilder;
-use Sentry\ClientBuilderInterface;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\Scope;
-use Sentry\Transport\TransportFactoryInterface;
+use Sentry\Transport\TransportInterface;
 use Throwable;
 use function Sentry\captureException;
 use function Sentry\captureMessage;
@@ -58,7 +57,7 @@ class SentryClient
     /**
      * @var string
      */
-    protected $transportFactoryClass;
+    protected $transportClass;
 
     /**
      * @Flow\Inject
@@ -73,7 +72,7 @@ class SentryClient
     {
         $this->settings = $settings;
         $this->dsn = $settings['dsn'] ?: '';
-        $this->transportFactoryClass = $settings['transportFactoryClass'] ?? '';
+        $this->transportClass = $settings['transportClass'] ?? '';
     }
 
     /**
@@ -279,22 +278,22 @@ class SentryClient
     }
 
     /**
-     * @param ClientBuilderInterface $clientBuilder
+     * @param ClientBuilder $clientBuilder
      * @throws InvalidConfigurationTypeException
      * @throws CannotBuildObjectException
      * @throws UnknownObjectException
      */
-    private function setCustomTransportIfConfigured(ClientBuilderInterface $clientBuilder): void
+    private function setCustomTransportIfConfigured(ClientBuilder $clientBuilder): void
     {
-        if ($this->transportFactoryClass === '') {
+        if ($this->transportClass === '') {
             return;
         }
 
-        /** @var TransportFactoryInterface $transportFactory */
-        $transportFactory = $this->objectManager->get($this->transportFactoryClass);
+        /** @var TransportInterface $transportFactory */
+        $transportFactory = $this->objectManager->get($this->transportClass);
 
-        if ($transportFactory instanceof TransportFactoryInterface) {
-            $clientBuilder->setTransportFactory($transportFactory);
+        if ($transportFactory instanceof TransportInterface) {
+            $clientBuilder->setTransport($transportFactory);
         }
     }
 }
