@@ -37,16 +37,9 @@ use function Sentry\captureMessage;
  */
 class SentryClient
 {
+    protected string $dsn;
 
-    /**
-     * @var string
-     */
-    protected $dsn;
-
-    /**
-     * @var array
-     */
-    protected $settings;
+    protected array $settings;
 
     /**
      * @Flow\Inject
@@ -54,10 +47,7 @@ class SentryClient
      */
     protected $packageManager;
 
-    /**
-     * @var string
-     */
-    protected $transportClass;
+    protected string $transportClass = '';
 
     /**
      * @Flow\Inject
@@ -65,9 +55,6 @@ class SentryClient
      */
     protected $objectManager;
 
-    /**
-     * @param array $settings
-     */
     public function injectSettings(array $settings): void
     {
         $this->settings = $settings;
@@ -132,7 +119,7 @@ class SentryClient
      * @param object $exception The exception to capture
      * @param array $extraData Additional data passed to the Sentry sample
      */
-    public function handleException($exception, array $extraData = []): void
+    public function handleException(object $exception, array $extraData = []): void
     {
         if (empty($this->dsn)) {
             return;
@@ -187,9 +174,6 @@ class SentryClient
         captureMessage($message, $severity);
     }
 
-    /**
-     * @return ClientInterface|null
-     */
     public function getSentryClient(): ?ClientInterface
     {
         return SentrySdk::getCurrentHub()->getClient();
@@ -222,9 +206,6 @@ class SentryClient
         });
     }
 
-    /**
-     * @return string
-     */
     private function getCurrentUsername(): string
     {
         $objectManager = Bootstrap::$staticObjectManager;
@@ -243,9 +224,6 @@ class SentryClient
         return $userName;
     }
 
-    /**
-     * @return string
-     */
     private function getReleaseFromReleaseFile(): string
     {
         $filenames = scandir(FLOW_PATH_ROOT);
@@ -261,9 +239,6 @@ class SentryClient
         return $release;
     }
 
-    /**
-     * @return string
-     */
     private function determineFlowVersion(): string
     {
         $flowVersion = FLOW_VERSION_BRANCH;
