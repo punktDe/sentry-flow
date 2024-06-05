@@ -56,8 +56,6 @@ trait ExceptionHandlerTrait
      *
      * During compile time there might be missing dependencies, so we need additional safeguards to
      * not cause errors.
-     *
-     * @param \Throwable $throwable
      */
     protected function sendExceptionToSentry(\Throwable $throwable): void
     {

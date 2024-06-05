@@ -11,7 +11,7 @@ PunktDe:
       send_default_pii: false
 
       #Please implement the Sentry\TransportInterface and configure the classname here, if you want to use a custom transport functionality
-      #transportFactoryClass: '\Vendor\Package\SentryTransportFactoryInterfaceImplementation'
+      #transportClass: '\Vendor\Package\SentryTransportInterfaceImplementation'
 Neos:
   Flow:
     error:

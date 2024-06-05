@@ -23,12 +23,11 @@ use Neos\Flow\Package\PackageManager;
 use Neos\Flow\Security\Context;
 use Neos\Flow\Utility\Environment;
 use Sentry\ClientBuilder;
-use Sentry\ClientBuilderInterface;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\Scope;
-use Sentry\Transport\TransportFactoryInterface;
+use Sentry\Transport\TransportInterface;
 use Throwable;
 use function Sentry\captureException;
 use function Sentry\captureMessage;
@@ -38,16 +37,9 @@ use function Sentry\captureMessage;
  */
 class SentryClient
 {
+    protected string $dsn;
 
-    /**
-     * @var string
-     */
-    protected $dsn;
-
-    /**
-     * @var array
-     */
-    protected $settings;
+    protected array $settings;
 
     /**
      * @Flow\Inject
@@ -55,10 +47,7 @@ class SentryClient
      */
     protected $packageManager;
 
-    /**
-     * @var string
-     */
-    protected $transportFactoryClass;
+    protected string $transportClass = '';
 
     /**
      * @Flow\Inject
@@ -66,14 +55,11 @@ class SentryClient
      */
     protected $objectManager;
 
-    /**
-     * @param array $settings
-     */
     public function injectSettings(array $settings): void
     {
         $this->settings = $settings;
         $this->dsn = $settings['dsn'] ?: '';
-        $this->transportFactoryClass = $settings['transportFactoryClass'] ?? '';
+        $this->transportClass = $settings['transportClass'] ?? '';
     }
 
     /**
@@ -133,7 +119,7 @@ class SentryClient
      * @param object $exception The exception to capture
      * @param array $extraData Additional data passed to the Sentry sample
      */
-    public function handleException($exception, array $extraData = []): void
+    public function handleException(object $exception, array $extraData = []): void
     {
         if (empty($this->dsn)) {
             return;
@@ -188,9 +174,6 @@ class SentryClient
         captureMessage($message, $severity);
     }
 
-    /**
-     * @return ClientInterface|null
-     */
     public function getSentryClient(): ?ClientInterface
     {
         return SentrySdk::getCurrentHub()->getClient();
@@ -223,9 +206,6 @@ class SentryClient
         });
     }
 
-    /**
-     * @return string
-     */
     private function getCurrentUsername(): string
     {
         $objectManager = Bootstrap::$staticObjectManager;
@@ -244,9 +224,6 @@ class SentryClient
         return $userName;
     }
 
-    /**
-     * @return string
-     */
     private function getReleaseFromReleaseFile(): string
     {
         $filenames = scandir(FLOW_PATH_ROOT);
@@ -262,9 +239,6 @@ class SentryClient
         return $release;
     }
 
-    /**
-     * @return string
-     */
     private function determineFlowVersion(): string
     {
         $flowVersion = FLOW_VERSION_BRANCH;
@@ -279,22 +253,22 @@ class SentryClient
     }
 
     /**
-     * @param ClientBuilderInterface $clientBuilder
+     * @param ClientBuilder $clientBuilder
      * @throws InvalidConfigurationTypeException
      * @throws CannotBuildObjectException
      * @throws UnknownObjectException
      */
-    private function setCustomTransportIfConfigured(ClientBuilderInterface $clientBuilder): void
+    private function setCustomTransportIfConfigured(ClientBuilder $clientBuilder): void
     {
-        if ($this->transportFactoryClass === '') {
+        if ($this->transportClass === '') {
             return;
         }
 
-        /** @var TransportFactoryInterface $transportFactory */
-        $transportFactory = $this->objectManager->get($this->transportFactoryClass);
+        /** @var TransportInterface $transportFactory */
+        $transportFactory = $this->objectManager->get($this->transportClass);
 
-        if ($transportFactory instanceof TransportFactoryInterface) {
-            $clientBuilder->setTransportFactory($transportFactory);
+        if ($transportFactory instanceof TransportInterface) {
+            $clientBuilder->setTransport($transportFactory);
         }
     }
 }
